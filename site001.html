@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>読書タイプ診断</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f7f2ea;
+      --card-bg: #ffffff;
+      --accent: #7fc7b5;      /* ミント */
+      --accent-soft: #c7efe4;
+      --accent-strong: #56a896;
+      --text-main: #262626;
+      --text-sub: #666666;
+      --danger: #f28b82;
+      --radius-lg: 24px;
+      --radius-full: 999px;
+      --shadow-soft: 0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #ffeef5 0, #f7f2ea 45%, #e8f6f3 100%);
+      color: var(--text-main);
+    }
+
+    .app {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 28px 16px 40px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), #ffd6e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .logo-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text-sub);
+    }
+
+    .card {
+      background: rgba(255,255,255,0.97);
+      border-radius: var(--radius-lg);
+      padding: 22px 18px 24px;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(16px);
+      animation: fadeIn 0.35s ease-out;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 0 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f0f0f5;
+      color: #555;
+    }
+    .badge.main {
+      background: var(--accent-soft);
+      color: #155c4e;
+      font-weight: 600;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 22px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.98rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+      box-shadow: 0 10px 24px rgba(64, 145, 124, 0.35);
+    }
+    .button span {
+      margin-left: 6px;
+      font-size: 1.1rem;
+    }
+    .button:hover {
+      background: var(--accent-strong);
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 14px 30px rgba(64, 145, 124, 0.4);
+    }
+    .button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 6px 16px rgba(64, 145, 124, 0.3);
+    }
+    .button:disabled {
+      background: #c8c8d0;
+      box-shadow: none;
+      cursor: default;
+      transform: none;
+    }
+
+    .question-index {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 650;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .progress-shell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .progress-label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: #e4e4ec;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-inner {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #ffc5dd);
+      transition: width 0.25s ease-out;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .choice {
+      border-radius: var(--radius-full);
+      border: 1px solid #e0e0ea;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+      background: #fafafa;
+    }
+    .choice-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    .choice-pill {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid #c2c2d0;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .choice-pill::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      transform: translate(-50%, -50%) scale(0);
+      border-radius: inherit;
+      background: var(--accent);
+      transition: transform 0.12s ease-out;
+    }
+    .choice-hint {
+      font-size: 0.75rem;
+      color: #999;
+    }
+    .choice.selected {
+      background: #ffffff;
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(64, 145, 124, 0.15);
+      transform: translateY(-1px);
+    }
+    .choice.selected .choice-pill {
+      border-color: var(--accent-strong);
+    }
+    .choice.selected .choice-pill::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-left {
+      font-size: 0.82rem;
+      color: var(--text-sub);
+    }
+
+    .result-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .result-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1.05rem;
+      font-weight: 650;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      background: var(--accent-soft);
+      color: #155c4e;
+      margin-bottom: 10px;
+    }
+    .result-chip-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ffb7c5, #b39ddb);
+    }
+    .result-desc {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .book-card {
+      border-radius: 18px;
+      border: 1px solid #eee;
+      padding: 14px 14px 12px;
+      background: linear-gradient(135deg, #fff, #fff7f3);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .book-card:hover {
+      box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+      transform: translateY(-1px);
+      transition: all 0.15s ease-out;
+    }
+    .book-thumb {
+      width: 42px;
+      height: 56px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ffd6e5, #c3f0e2);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #555;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    }
+    .book-body {
+      flex: 1;
+    }
+    .book-title {
+      font-weight: 650;
+      margin-bottom: 2px;
+      font-size: 0.96rem;
+    }
+    .book-meta {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .book-isbn {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tag-pill {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #f1ebff;
+      color: #5c4a92;
+    }
+
+    .restart {
+      margin-top: 16px;
+      text-align: right;
+    }
+    .restart .button {
+      padding-inline: 18px;
+      font-size: 0.9rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      font-size: 0.76rem;
+      color: #999;
+      text-align: center;
+    }
+
+    /* シェアボタン周り */
+    .share-row {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .share-label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+    .share-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .share-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: none;
+      background: #ffffff;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.08s ease, box-shadow 0.15s ease;
+    }
+    .share-icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.16);
+    }
+    .share-icon {
+      font-size: 1.1rem;
+    }
+
+    /* 詳細オーバーレイ */
+    .overlay-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .overlay-content {
+      width: min(420px, 92vw);
+      max-height: 85vh;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.98);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+      padding: 18px 18px 20px;
+      backdrop-filter: blur(14px);
+      animation: fadeIn 0.2s ease-out;
+    }
+    .overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .overlay-title {
+      font-size: 1rem;
+      font-weight: 650;
+      margin-right: 8px;
+    }
+    .overlay-close {
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: #888;
+    }
+    .overlay-close:hover {
+      color: #444;
+    }
+    .overlay-meta {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+    .overlay-isbn {
+      font-size: 0.8rem;
+      color: #999;
+      margin-bottom: 10px;
+    }
+    .overlay-section-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #444;
+      margin: 10px 0 4px;
+    }
+    .overlay-attrs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .overlay-attr-pill {
+      font-size: 0.76rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #f4f4fb;
+      color: #555;
+    }
+    .overlay-note {
+      font-size: 0.8rem;
+      color: #777;
+      line-height: 1.6;
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        padding: 26px 26px 28px;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="logo">
+      <div class="logo-mark">B</div>
+      <div class="logo-text">Book Personality Lab</div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="screen-start" class="card">
+      <h1>読書タイプ診断</h1>
+      <p class="subtitle">
+        11の質問に直感でこたえるだけで、<br />
+        あなたの「読書気質」と、いまのあなたにいちばん近い一冊がわかります。
+      </p>
+
+      <div class="badge-row">
+        <span class="badge main">本とのミスマッチをなくすための診断</span>
+        <span class="badge">診断時間：3分</span>
+        <span class="badge">全11問 / 4択</span>
+      </div>
+
+      <button class="button" id="startButton">
+        診断をはじめる <span>▶</span>
+      </button>
+
+      <div class="footer-note">
+        ※これは企画用のモック画面です。本番では結果タイプ数・推奨作品の精度がさらに上がります。
+      </div>
+    </div>
+
+    <!-- QUESTION SCREEN -->
+    <div id="screen-question" class="card" style="display:none;">
+      <div class="progress-shell">
+        <span class="progress-label" id="progressLabel">質問 1 / 11</span>
+        <div class="progress-bar">
+          <div class="progress-inner" id="progressInner"></div>
+        </div>
+      </div>
+
+      <div class="question-index" id="questionCounter"></div>
+      <div class="question-text" id="questionText"></div>
+
+      <div class="choices" id="choicesContainer"></div>
+
+      <div class="nav-row">
+        <div class="nav-left" id="hintText">深く考え込まず、最初の直感で大丈夫。</div>
+        <button class="button" id="nextButton" disabled>次へ</button>
+      </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="screen-result" class="card" style="display:none;">
+      <div class="result-title">診断結果</div>
+      <div class="result-type">
+        <span class="result-chip-dot"></span>
+        <span id="resultType"></span>
+      </div>
+      <div class="result-desc" id="resultDesc"></div>
+
+      <div class="book-card" id="bookCard">
+        <div class="book-thumb" id="bookThumb">
+          本
+        </div>
+        <div class="book-body">
+          <div class="book-title" id="recBookTitle"></div>
+          <div class="book-meta" id="recBookAuthor"></div>
+          <div class="book-isbn" id="recBookIsbn"></div>
+          <div class="tags-row" id="recTags"></div>
+        </div>
+      </div>
+
+      <div class="share-row">
+        <div class="share-label">結果をシェアする</div>
+        <div class="share-buttons">
+          <button class="share-icon-btn" id="shareXBtn" aria-label="Xでシェア">
+            <span class="share-icon">𝕏</span>
+          </button>
+          <button class="share-icon-btn" id="shareInstaBtn" aria-label="Instagramでシェア">
+            <span class="share-icon">📸</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="restart">
+        <button class="button" id="restartButton">もう一度診断する</button>
+      </div>
+
+      <div class="footer-note">
+        ※ 推薦はモック用の簡易ロジックです。本番では読書タイプ × ジャンル好み × 媒体嗜好からレコメンドされます。
+      </div>
+    </div>
+  </div>
+
+  <!-- 本の詳細オーバーレイ -->
+  <div class="overlay-backdrop" id="detailOverlay">
+    <div class="overlay-content">
+      <div class="overlay-header">
+        <div class="overlay-title" id="detailTitle"></div>
+        <button class="overlay-close" id="detailCloseBtn" aria-label="閉じる">×</button>
+      </div>
+      <div class="overlay-meta" id="detailMeta"></div>
+      <div class="overlay-isbn" id="detailIsbn"></div>
+
+      <div class="overlay-section-title">この本の読み味</div>
+      <div class="overlay-attrs" id="detailAttrs"></div>
+
+      <div class="overlay-section-title">ワンクリック検索</div>
+      <div class="overlay-attrs">
+        <a id="detailSearchLink" class="overlay-attr-pill" target="_blank" rel="noopener noreferrer">
+          書名＋ISBNで検索する
+        </a>
+      </div>
+
+      <p class="overlay-note">
+        ※ この詳細は企画用の簡易情報です。<br/>
+        実際の紹介ページでは、あらすじ・ターゲット読者・ボリューム感などを掲載できます。
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // 質問（断定調・11問）※元のまま
+    // =========================
+    const questions = [
+      "物語よりも、知識や情報が手に入る作品を選びがちだ。",
+      "キャラクターの感情に強く共鳴しながら読むほうだ。",
+      "テンポよく一気に読み進められる作品を最優先するほうだ。",
+      "読み終わるまで時間がかかっても、重厚な物語のほうに満足を感じるほうだ。",
+      "現実の延長線上にある、リアルな題材の物語が刺さりやすいほうだ。",
+      "現実離れした設定や世界観にどっぷり浸かれる物語に惹かれるほうだ。",
+      "「おもしろい」よりも「なにかを考えさせてくれる作品」を求めるほうだ。",
+      "短時間で読み切れる作品より、時間をかけて浸る作品が向いているほうだ。",
+      "キャラクターの心の動きがていねいに描かれた作品に価値を感じるほうだ。",
+      "伏線回収や構造の緻密さが、作品選びの決め手になりやすいほうだ。",
+      "読み終わったあと、誰かと感想を共有したくなることが多いほうだ。"
+    ];
+
+    // 4択（スコア用の値も付与）
+    const choices = [
+      { label: "はい", value: 2, hint: "かなり当てはまる" },
+      { label: "どちらかといえばはい", value: 1, hint: "なんとなく当てはまる" },
+      { label: "どちらかといえばいいえ", value: -1, hint: "あまり当てはまらない" },
+      { label: "いいえ", value: -2, hint: "まったく当てはまらない" }
+    ];
+
+    // =========================
+    // 作品データ（80冊）＋ 属性
+    // =========================
+    const books = [
+      { id:1,  title:"medium 霊媒探偵城塚翡翠", author:"相沢沙呼", isbn:"978-4065170946", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"normal"} },
+      { id:2,  title:"invert 城塚翡翠倒叙集", author:"相沢沙呼", isbn:"978-4065237328", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"normal"} },
+      { id:3,  title:"invert Ⅱ 覗き窓の死角", author:"相沢沙呼", isbn:"978-4065286388", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"normal"} },
+      { id:4,  title:"小説の神様", author:"相沢沙呼", isbn:"978-4062940344", meta:{purpose:"story", category:"human", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:5,  title:"この配信は終了しました", author:"青木雪平", isbn:"978-4575248197", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:6,  title:"暗黒少女", author:"秋吉理香子", isbn:"978-4575238259", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:7,  title:"自殺予定日", author:"秋吉理香子", isbn:"978-4488418212", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:8,  title:"正欲", author:"朝井リョウ", isbn:"978-4-10-126933-7", meta:{purpose:"story", category:"drama", tempo:"slow", world:"real", emotion:"high", difficulty:"hard"} },
+      { id:9,  title:"何者", author:"朝井リョウ", isbn:"978-4-10-126931-3", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:10, title:"桐島、部活やめるってよ", author:"朝井リョウ", isbn:"978-4-08-771335-0", meta:{purpose:"story", category:"human", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:11, title:"生殖記", author:"朝井リョウ", isbn:"978-4-09-386730-6", meta:{purpose:"story", category:"drama", tempo:"slow", world:"real", emotion:"medium", difficulty:"hard"} },
+      { id:12, title:"世にも奇妙な君物語", author:"朝井リョウ", isbn:"978-4-06-219824-0", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"normal"} },
+      { id:13, title:"武道館", author:"朝井リョウ", isbn:"978-4-06-219824-0", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:14, title:"どうしても生きてる", author:"朝井リョウ", isbn:"978-4-34-403516-4", meta:{purpose:"story", category:"human", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:15, title:"俺ではない炎上", author:"浅倉秋成", isbn:"978-4-57-552758-2", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:16, title:"6人の嘘つきな大学生", author:"浅倉秋成", isbn:"978-4041098790", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:17, title:"家族解散まで千キロメートル", author:"浅倉秋成", isbn:"978-4041145647", meta:{purpose:"story", category:"human", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:18, title:"嘘と隣人", author:"芦沢央", isbn:"978-4163919713", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:19, title:"許されようとは思いません", author:"芦沢央", isbn:"9784101014319", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:20, title:"殺戮にいたる病", author:"我孫子武丸", isbn:"978-4041145647", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:21, title:"修羅の家", author:"我孫子武丸", isbn:"978-4-065-32461-5", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:22, title:"０の殺人", author:"我孫子武丸", isbn:"978-4-061-85227-3", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:23, title:"箱男", author:"安倍工房", isbn:"978-4-101-12116-1", meta:{purpose:"story", category:"drama", tempo:"slow", world:"real", emotion:"medium", difficulty:"hard"} },
+      { id:24, title:"十角館の殺人", author:"綾辻行人", isbn:"978-4-06-275857-4", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"normal"} },
+      { id:25, title:"くますけと一緒に", author:"新井素子", isbn:"978-4-12-207599-3", meta:{purpose:"story", category:"fantasy", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"easy"} },
+      { id:26, title:"ようこそ、我が家へ", author:"池井戸潤", isbn:"978-4-09-408843-4", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:27, title:"俺たちバブル入行組", author:"池井戸潤", isbn:"978-4-16-323600-1", meta:{purpose:"story", category:"business", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:28, title:"下町ロケット", author:"池井戸潤", isbn:"978-4-09-408896-0", meta:{purpose:"story", category:"business", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:29, title:"シャイロックの子供たち", author:"池井戸潤", isbn:"978-4-16-324630-7", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:30, title:"民王", author:"池井戸潤", isbn:"978-4-59-111662-3", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:31, title:"ハヤブサ消防団", author:"池井戸潤", isbn:"978-4-08-744767-5", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:32, title:"アキラとあきら", author:"池井戸潤", isbn:"978-4-19-894230-4", meta:{purpose:"story", category:"business", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:33, title:"七つの会議", author:"池井戸潤", isbn:"978-4-08-745412-3", meta:{purpose:"story", category:"business", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:34, title:"ノーサイド・ゲーム", author:"池井戸潤", isbn:"978-4-06-529910-4", meta:{purpose:"story", category:"business", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:35, title:"ゴールデンスランバー", author:"伊坂幸太郎", isbn:"978-4-10-125026-7", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:36, title:"グラスホッパー", author:"伊坂幸太郎", isbn:"978-4-16-324630-7", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:37, title:"魔王", author:"伊坂幸太郎", isbn:"978-4-06-213146-9", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:38, title:"娼年", author:"石田衣良", isbn:"978-4-08-747694-1", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:39, title:"池袋ウエストゲートパーク", author:"石田衣良", isbn:"978-4-16-717403-3", meta:{purpose:"story", category:"drama", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:40, title:"いま、会いにゆきます", author:"市川拓司", isbn:"978-4-09-408217-3", meta:{purpose:"story", category:"romance", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:41, title:"夫恋殺　つまごいごろし", author:"魚崎依知子", isbn:"978-4041147474", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:42, title:"時計は二度と凍らない", author:"魚崎依知子", isbn:"978-4863114609", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:43, title:"変な家", author:"雨穴", isbn:"978-4864108454", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:44, title:"変な絵", author:"雨穴", isbn:"978-4575528138", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:45, title:"変な家2", author:"雨穴", isbn:"978-4864109826", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:46, title:"変な地図", author:"雨穴", isbn:"978-4575248104", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:47, title:"桜のような僕の恋人", author:"宇山佳祐", isbn:"978-4087455489", meta:{purpose:"story", category:"romance", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:48, title:"この恋は世界でいちばん美しい雨", author:"宇山佳祐", isbn:"978-4087442571", meta:{purpose:"story", category:"romance", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:49, title:"恋に焦がれたブルー＾", author:"宇山佳祐", isbn:"978-4087445220", meta:{purpose:"story", category:"romance", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:50, title:"ひまわりは恋の形", author:"宇山佳祐", isbn:"978-4093866392", meta:{purpose:"story", category:"romance", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:51, title:"なぜどうの剣までしか売らないんですか？", author:"エフ", isbn:"978-4408537740", meta:{purpose:"learning", category:"business", tempo:"medium", world:"real", emotion:"low", difficulty:"normal"} },
+      { id:52, title:"推しの殺人", author:"遠藤かたる", isbn:"978-4299051134", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:53, title:"＃マンホール", author:"岡田道尚", isbn:"978-4299039170", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"easy"} },
+      { id:54, title:"緑の我が家", author:"小野不由美", isbn:"978-4041127506", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"mixed", emotion:"medium", difficulty:"normal"} },
+      { id:55, title:"チーム・バチスタの栄光", author:"海堂尊", isbn:"978-4796650793", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:56, title:"ブラックペアン1988", author:"海堂尊", isbn:"978-4062142540", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:57, title:"八日目の蝉", author:"角田光代", isbn:"978-4122054257", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:58, title:"対岸の彼女", author:"角田光代", isbn:"978-4167672058", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:59, title:"オルタネート", author:"加藤シゲアキ", isbn:"978-4103537311", meta:{purpose:"story", category:"human", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:60, title:"ピンクとグレー", author:"加藤シゲアキ", isbn:"978-4087447309", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:61, title:"なれのはて", author:"加藤シゲアキ", isbn:"978-4065331439", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:62, title:"蛇にピアス", author:"金原ひとみ", isbn:"978-4087460483", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:63, title:"ミーツ・ザ・ワールド", author:"金原ひとみ", isbn:"978-4087447309", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:64, title:"黄色い家", author:"川上 未映子", isbn:"978-4120056284", meta:{purpose:"story", category:"drama", tempo:"slow", world:"real", emotion:"medium", difficulty:"hard"} },
+      { id:65, title:"嘘つきな私と、紫の瞳", author:"神戸遥真", isbn:"978-4867165348", meta:{purpose:"story", category:"romance", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:66, title:"全能のカミナ", author:"喜多喜久", isbn:"978-4302100071", meta:{purpose:"story", category:"fantasy", tempo:"fast", world:"fantasy", emotion:"medium", difficulty:"normal"} },
+      { id:67, title:"１リットルの涙", author:"木藤亜也", isbn:"978-4-344-40610-0", meta:{purpose:"growth", category:"essay", tempo:"medium", world:"real", emotion:"high", difficulty:"easy"} },
+      { id:68, title:"二人一組になってください", author:"木爾チレン", isbn:"978-4575247688", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:69, title:"神に愛されていた", author:"木爾チレン", isbn:"978-4408538402", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:70, title:"みんな蛍を殺したかった", author:"木爾チレン", isbn:"978-4576211015", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:71, title:"死刑にいたる病", author:"櫛木理宇", isbn:"978-4150313005", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} },
+      { id:72, title:"殺人依存症", author:"櫛木理宇", isbn:"978-4344430259", meta:{purpose:"story", category:"suspense", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:73, title:"復讐の泥沼", author:"くわがきあゆ", isbn:"978-4299057587", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:74, title:"レモンと殺人鬼", author:"くわがきあゆ", isbn:"978-4299041678", meta:{purpose:"story", category:"mystery", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:75, title:"爆弾", author:"呉 勝浩", isbn:"978-4065273470", meta:{purpose:"story", category:"suspense", tempo:"fast", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:76, title:"スワン", author:"呉 勝浩", isbn:"978-4041127575", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:77, title:"記憶喪失の君と、君だけを忘れてしまった僕。", author:"小鳥居ほたる", isbn:"978-4813704867", meta:{purpose:"story", category:"romance", tempo:"medium", world:"mixed", emotion:"high", difficulty:"easy"} },
+      { id:78, title:"アリス殺し", author:"小林泰三", isbn:"978-4488420147", meta:{purpose:"story", category:"mystery", tempo:"medium", world:"fantasy", emotion:"medium", difficulty:"normal"} },
+      { id:79, title:"代表取締役アイドル", author:"小林泰三", isbn:"978-4163912134", meta:{purpose:"story", category:"drama", tempo:"medium", world:"real", emotion:"medium", difficulty:"normal"} },
+      { id:80, title:"M 愛すべき人がいて", author:"小松成美", isbn:"978-4344429819", meta:{purpose:"growth", category:"nonfic", tempo:"medium", world:"real", emotion:"high", difficulty:"normal"} }
+    ];
+
+    // =========================
+    // 状態管理
+    // =========================
+    let currentIndex = 0;
+    let answers = [];
+    let lastProfile = null;
+    let lastBook = null;
+
+    // DOM
+    const screenStart = document.getElementById("screen-start");
+    const screenQuestion = document.getElementById("screen-question");
+    const screenResult = document.getElementById("screen-result");
+
+    const startButton = document.getElementById("startButton");
+    const nextButton = document.getElementById("nextButton");
+    const restartButton = document.getElementById("restartButton");
+
+    const questionCounter = document.getElementById("questionCounter");
+    const questionText = document.getElementById("questionText");
+    const choicesContainer = document.getElementById("choicesContainer");
+    const progressInner = document.getElementById("progressInner");
+    const progressLabel = document.getElementById("progressLabel");
+
+    const resultType = document.getElementById("resultType");
+    const resultDesc = document.getElementById("resultDesc");
+    const recBookTitle = document.getElementById("recBookTitle");
+    const recBookAuthor = document.getElementById("recBookAuthor");
+    const recBookIsbn = document.getElementById("recBookIsbn");
+    const recTags = document.getElementById("recTags");
+
+    const bookCard = document.getElementById("bookCard");
+    const bookThumb = document.getElementById("bookThumb");
+
+    const shareXBtn = document.getElementById("shareXBtn");
+    const shareInstaBtn = document.getElementById("shareInstaBtn");
+
+    const detailOverlay = document.getElementById("detailOverlay");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailMeta = document.getElementById("detailMeta");
+    const detailIsbn = document.getElementById("detailIsbn");
+    const detailAttrs = document.getElementById("detailAttrs");
+    const detailSearchLink = document.getElementById("detailSearchLink");
+    const detailCloseBtn = document.getElementById("detailCloseBtn");
+
+    // =========================
+    // イベント
+    // =========================
+    startButton.addEventListener("click", () => {
+      screenStart.style.display = "none";
+      screenQuestion.style.display = "block";
+      currentIndex = 0;
+      answers = [];
+      lastProfile = null;
+      lastBook = null;
+      renderQuestion();
+    });
+
+    nextButton.addEventListener("click", () => {
+      const selected = document.querySelector(".choice.selected");
+      if (!selected) return;
+      const value = Number(selected.dataset.value);
+      answers[currentIndex] = value;
+
+      if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    restartButton.addEventListener("click", () => {
+      screenResult.style.display = "none";
+      screenStart.style.display = "block";
+    });
+
+    // 本カードクリック → 詳細
+    bookCard.addEventListener("click", () => {
+      if (!lastBook || !lastProfile) return;
+      openDetailOverlay(lastBook, lastProfile);
+    });
+
+    // オーバーレイ閉じる
+    detailCloseBtn.addEventListener("click", () => {
+      detailOverlay.style.display = "none";
+    });
+    detailOverlay.addEventListener("click", (e) => {
+      if (e.target === detailOverlay) {
+        detailOverlay.style.display = "none";
+      }
+    });
+
+    // Xでシェア
+    shareXBtn.addEventListener("click", () => {
+      if (!lastBook || !lastProfile) return;
+      const text =
+        `読書タイプ診断で「${lastProfile.typeName}」タイプでした。\n` +
+        `おすすめ本は『${lastBook.title}』。\n`;
+      const url = location.href;
+      const shareUrl =
+        "https://twitter.com/intent/tweet?text=" +
+        encodeURIComponent(text) +
+        "&url=" +
+        encodeURIComponent(url);
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+    });
+
+    // Instagramボタン（プロフィールトップ or アプリ起動用リンク）
+    shareInstaBtn.addEventListener("click", () => {
+      // 投稿に直接テキストを流し込むことはできないので、
+      // とりあえずInstagramトップを開くモック。
+      window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+    });
+
+    // =========================
+    // 質問描画
+    // =========================
+    function renderQuestion() {
+      nextButton.disabled = true;
+
+      questionCounter.textContent = `Q${currentIndex + 1}`;
+      questionText.textContent = questions[currentIndex];
+
+      const progress = (currentIndex / questions.length) * 100;
+      progressInner.style.width = `${progress}%`;
+      progressLabel.textContent = `質問 ${currentIndex + 1} / ${questions.length}`;
+
+      choicesContainer.innerHTML = "";
+
+      choices.forEach((c) => {
+        const div = document.createElement("div");
+        div.className = "choice";
+        div.dataset.value = c.value;
+
+        div.innerHTML = `
+          <div class="choice-main">
+            <div class="choice-pill"></div>
+            <span>${c.label}</span>
+          </div>
+          <div class="choice-hint">${c.hint}</div>
+        `;
+
+        div.addEventListener("click", () => {
+          document.querySelectorAll(".choice").forEach(ch => ch.classList.remove("selected"));
+          div.classList.add("selected");
+          nextButton.disabled = false;
+        });
+
+        choicesContainer.appendChild(div);
+      });
+
+      // すでに回答があれば復元
+      if (typeof answers[currentIndex] === "number") {
+        const idx = choices.findIndex(c => c.value === answers[currentIndex]);
+        if (idx >= 0 && choicesContainer.children[idx]) {
+          choicesContainer.children[idx].classList.add("selected");
+          nextButton.disabled = false;
+        }
+      }
+    }
+
+    // =========================
+    // プロフィール計算（先生向けロジック）
+    // =========================
+    function getTypeInfo(ans) {
+      const total = ans.reduce((a, b) => a + b, 0);
+
+      // 目的スコア
+      const purpose = { relax:0, learning:0, story:0, growth:0 };
+      // カテゴリスコア
+      const cat = { drama:0, mystery:0, romance:0, suspense:0, fantasy:0, human:0, business:0, selfhelp:0, essay:0, nonfic:0 };
+      // 嗜好軸
+      let fastSlow = 0;      // +でFast、-でSlow
+      let realFantasy = 0;   // +でFantasy、-でReal
+      let emotionAxis = 0;   // +で感情、-で思考
+      let depthAxis = 0;     // +で深さ
+
+      // Q1 知識/情報 vs 物語
+      if (ans[0] != null) {
+        purpose.learning += ans[0] > 0 ? 2 : 0;
+        purpose.story    += ans[0] < 0 ? 2 : 0;
+      }
+
+      // Q2 情緒共感 → ドラマ/ヒューマン
+      if (ans[1] != null) {
+        emotionAxis += ans[1];
+        cat.drama   += ans[1] > 0 ? 2 : 0;
+        cat.human   += ans[1] > 0 ? 1 : 0;
+      }
+
+      // Q3 テンポ速い
+      if (ans[2] != null) {
+        fastSlow += ans[2];
+      }
+
+      // Q4 重厚な物語
+      if (ans[3] != null) {
+        depthAxis += ans[3];
+        fastSlow  -= ans[3] * 0.5;
+      }
+
+      // Q5 現実寄り
+      if (ans[4] != null) {
+        realFantasy -= ans[4];
+        cat.drama   += ans[4] > 0 ? 1 : 0;
+        cat.human   += ans[4] > 0 ? 1 : 0;
+      }
+
+      // Q6 非現実寄り
+      if (ans[5] != null) {
+        realFantasy += ans[5];
+        cat.fantasy += ans[5] > 0 ? 2 : 0;
+      }
+
+      // Q7 気づき重視 → 学び/成長/自己啓発
+      if (ans[6] != null) {
+        purpose.learning += ans[6] > 0 ? 1 : 0;
+        purpose.growth   += ans[6] > 0 ? 2 : 0;
+        cat.selfhelp     += ans[6] > 0 ? 2 : 0;
+        depthAxis        += ans[6] * 0.5;
+      }
+
+      // Q8 長時間浸る
+      if (ans[7] != null) {
+        depthAxis += ans[7];
+        fastSlow  -= ans[7] * 0.5;
+      }
+
+      // Q9 心理描写
+      if (ans[8] != null) {
+        emotionAxis += ans[8] * 1.2;
+        cat.drama   += ans[8] > 0 ? 2 : 0;
+        cat.human   += ans[8] > 0 ? 1 : 0;
+      }
+
+      // Q10 伏線・構造
+      if (ans[9] != null) {
+        cat.mystery += ans[9] > 0 ? 3 : 0;
+        depthAxis   += ans[9];
+      }
+
+      // Q11 感想共有 → 話題性のあるジャンル
+      if (ans[10] != null) {
+        purpose.relax += ans[10] > 0 ? 1 : 0;
+        cat.mystery   += ans[10] > 0 ? 1 : 0;
+        cat.romance   += ans[10] > 0 ? 1 : 0;
+        cat.human     += ans[10] > 0 ? 1 : 0;
+      }
+
+      // 目的の決定
+      let purposeKey = "story";
+      let maxP = -Infinity;
+      Object.entries(purpose).forEach(([k,v])=>{
+        if(v > maxP){ maxP = v; purposeKey = k; }
+      });
+
+      // カテゴリの決定
+      let catKey = "drama";
+      let maxC = -Infinity;
+      Object.entries(cat).forEach(([k,v])=>{
+        if(v > maxC){ maxC = v; catKey = k; }
+      });
+
+      // テンポ嗜好
+      let tempoPref = "medium";
+      if (fastSlow >= 3) tempoPref = "fast";
+      else if (fastSlow <= -3) tempoPref = "slow";
+
+      // 世界観嗜好
+      let worldPref = "mixed";
+      if (realFantasy >= 3) worldPref = "fantasy";
+      else if (realFantasy <= -3) worldPref = "real";
+
+      // 感情軸
+      let emotionPref = "medium";
+      if (emotionAxis >= 4) emotionPref = "high";
+      else if (emotionAxis <= -2) emotionPref = "low";
+
+      // 深さ
+      let depthPref = "medium";
+      if (depthAxis >= 4) depthPref = "deep";
+      else if (depthAxis <= -2) depthPref = "light";
+
+      // タイプ名（色 × 世界観）
+      let colorWord = "";
+      if (emotionAxis >= 4) {
+        colorWord = "ピンクブロッサム";
+      } else if (emotionAxis >= 1) {
+        colorWord = "ラベンダー";
+      } else if (emotionAxis <= -3) {
+        colorWord = "モカブラウン";
+      } else {
+        colorWord = "ミントグリーン";
+      }
+
+      let worldWord = "";
+      if (worldPref === "fantasy") {
+        worldWord = "ファンタジーワールド";
+      } else if (worldPref === "real") {
+        worldWord = "リアルライフ";
+      } else {
+        worldWord = "ミックスワールド";
+      }
+
+      const typeName = `${colorWord}・${worldWord}タイプ`;
+
+      // 説明テキスト
+      let desc = "";
+      if (colorWord === "ピンクブロッサム" && worldPref === "fantasy") {
+        desc = "感情移入と非日常の世界観のどちらも強く求めるタイプ。キャラクターの心情に寄り添いながら、日常では味わえない出来事に巻き込まれていく物語との相性が良い。切なさやときめきのあるストーリーや、ドラマチックな展開が続く作品が「刺さる一冊」になりやすい。";
+      } else if (colorWord === "ピンクブロッサム") {
+        desc = "人物の感情や関係性を何より大事にしたいタイプ。世界観が現実寄りでも非日常寄りでも、登場人物の心の揺れや距離感が丁寧に描かれているかどうかが、作品の好き嫌いを分ける。恋愛・青春・ヒューマンドラマ系の物語には、特に強く惹きつけられやすい。";
+      } else if (colorWord === "ラベンダー" && worldPref === "fantasy") {
+        desc = "世界観の広がりと、しっとりした感情の余韻のバランスを好むタイプ。激しすぎる展開よりも、静かに心に残る台詞やシーンをじっくり味わいたいほう。少し不思議な設定や、現実と隣り合わせのファンタジー作品を「お気に入り」にしやすい。";
+      } else if (colorWord === "ミントグリーン" && worldPref === "real") {
+        desc = "すこし引いた目線で、現実に近いテーマを味わうのが得意なタイプ。人間や社会を描く作品の中から、自分なりの解釈や気づきを拾い上げる読み方が向いている。仕事・家族・友情など、身近な題材を扱う物語に、じわじわ共感することが多い。";
+      } else if (colorWord === "モカブラウン") {
+        desc = "派手な演出よりも、落ち着いたトーンと重みのあるストーリーを好むタイプ。読み進めるのに少しエネルギーが必要でも、そのぶん読後に深い満足感を得やすい。ミステリや社会派、心理描写の濃い作品など、「腰を据えて向き合う一冊」との縁が強い。";
+      } else {
+        desc = "感情・世界観・構成のどれか一つに偏りすぎない、ニュートラルな読書気質。話題作・映像化作品・定番小説など、まずはいろいろ触れてみることで「自分の好きな傾向」が自然と見えてくるタイプ。診断結果をきっかけに、新しいジャンルを試してみるのもおすすめ。";
+      }
+
+      const tags = [];
+      if (emotionAxis >= 2) tags.push("#感情移入重視");
+      if (emotionAxis <= -2) tags.push("#思考派読者");
+      if (worldPref === "fantasy") tags.push("#非日常が好き");
+      if (worldPref === "real") tags.push("#現実寄りストーリー");
+      if (fastSlow >= 2) tags.push("#テンポ重視");
+      if (fastSlow <= -2) tags.push("#じっくり派");
+      if (depthPref === "deep") tags.push("#読後の余韻重視");
+      if (tags.length === 0) tags.push("#バランス型読書タイプ");
+
+      return {
+        typeName,
+        desc,
+        tags,
+        totalScore: total,
+        purpose: purposeKey,
+        category: catKey,
+        tempoPref,
+        worldPref,
+        emotionPref,
+        depthPref
+      };
+    }
+
+    // =========================
+    // 本とのマッチングスコア
+    // =========================
+    function scoreBook(book, profile) {
+      const m = book.meta || {};
+      let s = 0;
+
+      // 目的一致
+      if (m.purpose === profile.purpose) s += 4;
+      // カテゴリ一致
+      if (m.category === profile.category) s += 4;
+
+      // 世界観
+      if (profile.worldPref === m.world) s += 3;
+      else if (profile.worldPref === "mixed" || m.world === "mixed") s += 1;
+
+      // テンポ
+      if (profile.tempoPref === m.tempo) s += 2;
+
+      // 感情量
+      if (profile.emotionPref === m.emotion) s += 2;
+
+      // 深さ
+      if (profile.depthPref === "deep" && (m.difficulty === "normal" || m.difficulty === "hard")) s += 1;
+      if (profile.depthPref === "light" && m.difficulty === "easy") s += 1;
+
+      return s;
+    }
+
+    // =========================
+    // 結果表示
+    // =========================
+    function showResult() {
+      screenQuestion.style.display = "none";
+      screenResult.style.display = "block";
+      progressInner.style.width = "100%";
+
+      const info = getTypeInfo(answers);
+      lastProfile = info;
+
+      resultType.textContent = info.typeName;
+      resultDesc.textContent = info.desc;
+
+      // 本のレコメンド
+      let bestBook = null;
+      let bestScore = -Infinity;
+
+      books.forEach(b => {
+        const s = scoreBook(b, info);
+        if (s > bestScore) {
+          bestScore = s;
+          bestBook = b;
+        }
+      });
+
+      if (!bestBook || bestScore <= 0) {
+        bestBook = books[Math.floor(Math.random() * books.length)];
+      }
+      lastBook = bestBook;
+
+      recBookTitle.textContent = `おすすめの一冊：${bestBook.title}`;
+      recBookAuthor.textContent = `著者：${bestBook.author}`;
+      recBookIsbn.textContent = `ISBN：${bestBook.isbn}`;
+
+      recTags.innerHTML = "";
+      info.tags.forEach(t => {
+        const span = document.createElement("span");
+        span.className = "tag-pill";
+        span.textContent = t;
+        recTags.appendChild(span);
+      });
+
+      bookThumb.textContent = "本";
+    }
+
+    // =========================
+    // 詳細オーバーレイ
+    // =========================
+    function openDetailOverlay(book, profile) {
+      detailTitle.textContent = book.title;
+      detailMeta.textContent = `著者：${book.author}`;
+      detailIsbn.textContent = `ISBN：${book.isbn}`;
+      detailAttrs.innerHTML = "";
+
+      const m = book.meta || {};
+
+      const attrMap = [
+        { label:"目的", key:"purpose", map:{
+          relax:"気分転換・エンタメ寄り",
+          learning:"知識・ビジネス・実用寄り",
+          story:"物語を楽しむメイン",
+          growth:"自己成長・ノンフィクション寄り"
+        }},
+        { label:"カテゴリ", key:"category", map:{
+          drama:"ドラマ・文学寄り",
+          mystery:"ミステリー / トリック",
+          romance:"恋愛・ラブストーリー",
+          suspense:"サスペンス・どきどき系",
+          fantasy:"ファンタジー / 非日常",
+          human:"青春・ヒューマンドラマ",
+          business:"ビジネス・仕事",
+          selfhelp:"自己啓発・ライフハック",
+          essay:"エッセイ / ノンフィクション寄り",
+          nonfic:"ノンフィクション"
+        }},
+        { label:"テンポ", key:"tempo", map:{
+          fast:"テンポ速め（サクサク読める）",
+          medium:"ふつうのテンポ",
+          slow:"じっくり読み進める系"
+        }},
+        { label:"世界観", key:"world", map:{
+          real:"現実寄りの世界観",
+          fantasy:"非日常・ファンタジー寄り",
+          mixed:"現実＋少し不思議"
+        }},
+        { label:"感情の濃さ", key:"emotion", map:{
+          high:"感情描写が濃い",
+          medium:"ほどよく感情もある",
+          low:"どちらかといえば思考寄り"
+        }},
+        { label:"読みごたえ", key:"difficulty", map:{
+          easy:"読みやすい / ライト",
+          normal:"ふつう",
+          hard:"ややじっくり系"
+        }}
+      ];
+
+      attrMap.forEach(cfg => {
+        const val = m[cfg.key];
+        if (!val) return;
+        const span = document.createElement("span");
+        span.className = "overlay-attr-pill";
+        const label = cfg.map[val] || val;
+        span.textContent = `${cfg.label}：${label}`;
+        detailAttrs.appendChild(span);
+      });
+
+      const q = encodeURIComponent(`${book.title} ${book.isbn}`);
+      detailSearchLink.href = `https://www.google.com/search?q=${q}`;
+
+      detailOverlay.style.display = "flex";
+    }
+  </script>
+</body>
+</html>
